@@ -291,7 +291,7 @@ export const questions: Question[] = [
   {
     id: 46,
     question: "What is the political party of the President now?",
-    answer: "Democratic Party",
+    answer: "Democratic Party, Republican Party",
     category: "System of Government",
   },
   {

@@ -81,22 +81,6 @@ export const QuizApp: React.FC = () => {
     getRandomQuestion();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const getRandomQuestion = useCallback(() => {
-    const unansweredQuestions = questions.filter(
-      (q) => !answeredQuestions.includes(q.id)
-    );
-    const availableQuestions =
-      unansweredQuestions.length > 0 ? unansweredQuestions : questions;
-
-    const randomIndex = Math.floor(Math.random() * availableQuestions.length);
-    const question = availableQuestions[randomIndex];
-
-    setCurrentQuestion(question);
-    setUserAnswer("");
-    setShowAnswer(false);
-    stopSpeaking();
-  }, [answeredQuestions]); // eslint-disable-line react-hooks/exhaustive-deps
-
   const stopSpeaking = useCallback(() => {
     if (speechSynthRef.current) {
       speechSynthRef.current.cancel();
@@ -106,6 +90,29 @@ export const QuizApp: React.FC = () => {
       currentUtteranceRef.current = null;
     }
   }, []);
+
+  const getRandomQuestion = useCallback(() => {
+    // If all questions have been answered, show a completion message and reset
+    if (answeredQuestions.length >= questions.length) {
+      message.success("🎉 Chúc mừng! Bạn đã hoàn thành tất cả các câu hỏi!");
+      setCurrentQuestion(null);
+      return;
+    }
+
+    // Get all unanswered questions
+    const unansweredQuestions = questions.filter(
+      (q) => !answeredQuestions.includes(q.id)
+    );
+
+    // Select a random question from unanswered ones
+    const randomIndex = Math.floor(Math.random() * unansweredQuestions.length);
+    const question = unansweredQuestions[randomIndex];
+
+    setCurrentQuestion(question);
+    setUserAnswer("");
+    setShowAnswer(false);
+    stopSpeaking();
+  }, [answeredQuestions, stopSpeaking]);
 
   const speakText = useCallback(
     (text: string, voiceName?: string) => {
@@ -260,6 +267,7 @@ export const QuizApp: React.FC = () => {
     setCorrectAnswers([]);
     getRandomQuestion();
     stopSpeaking();
+    message.info("Đã làm mới bài kiểm tra!");
   };
 
   const progress = (answeredQuestions.length / questions.length) * 100;
@@ -350,7 +358,7 @@ export const QuizApp: React.FC = () => {
         <Content style={{ padding: "20px" }}>
           <Row justify="center">
             <Col xs={24} lg={18}>
-              {currentQuestion && (
+              {currentQuestion ? (
                 <QuestionCard
                   question={currentQuestion}
                   userAnswer={userAnswer}
@@ -358,12 +366,26 @@ export const QuizApp: React.FC = () => {
                   onAnswerChange={setUserAnswer}
                   onSpeak={speakText}
                 />
+              ) : (
+                <Card>
+                  <div style={{ textAlign: "center", padding: "40px" }}>
+                    <Title level={3}>🎉 Hoàn thành!</Title>
+                    <Text>
+                      Bạn đã trả lời tất cả {questions.length} câu hỏi. Nhấn
+                      "Làm mới" để bắt đầu lại.
+                    </Text>
+                  </div>
+                </Card>
               )}
 
               <Card style={{ marginTop: "20px" }}>
                 <Row justify="space-between" align="middle">
                   <Col>
-                    <Button size="large" onClick={handleNextQuestion}>
+                    <Button
+                      size="large"
+                      onClick={handleNextQuestion}
+                      disabled={!currentQuestion}
+                    >
                       Câu hỏi tiếp theo
                     </Button>
                   </Col>
@@ -372,7 +394,9 @@ export const QuizApp: React.FC = () => {
                       type="primary"
                       size="large"
                       onClick={handleCheckAnswer}
-                      disabled={!userAnswer.trim() || showAnswer}
+                      disabled={
+                        !userAnswer.trim() || showAnswer || !currentQuestion
+                      }
                     >
                       Kiểm tra đáp án
                     </Button>
