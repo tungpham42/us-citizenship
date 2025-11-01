@@ -275,7 +275,7 @@ export const QuizApp: React.FC = () => {
           level={2}
           style={{ color: "white", margin: 0, lineHeight: "64px" }}
         >
-          🇺🇸 Luyện Thi Quốc Tịch Mỹ
+          🇺🇸 Luyện Thi Quốc Tịch Hoa Kỳ
         </Title>
       </Header>
 
