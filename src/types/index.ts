@@ -17,3 +17,11 @@ export interface SpeechState {
   selectedVoice: string;
   availableVoices: VoiceOption[];
 }
+
+export interface VoiceSelectorProps {
+  selectedVoice: string;
+  onVoiceChange: (voice: string) => void;
+  onTestVoice: (voiceName: string) => void;
+  isPlaying?: boolean;
+  availableVoices: VoiceOption[];
+}

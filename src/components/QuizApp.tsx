@@ -19,6 +19,7 @@ import {
 import { questions } from "../data/questions";
 import { QuestionCard } from "./QuestionCard";
 import { VoiceSelector } from "./VoiceSelector";
+import { LipSyncFace } from "./LipSyncFace";
 import { Question, VoiceOption } from "../types";
 
 const { Header, Content, Sider } = Layout;
@@ -33,6 +34,7 @@ export const QuizApp: React.FC = () => {
   const [correctAnswers, setCorrectAnswers] = useState<number[]>([]);
   const [isPlaying, setIsPlaying] = useState(false);
   const [availableVoices, setAvailableVoices] = useState<VoiceOption[]>([]); // eslint-disable-line
+  const [currentSpokenText, setCurrentSpokenText] = useState("");
 
   const speechSynthRef = useRef<SpeechSynthesis | null>(null);
   const currentUtteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
@@ -85,6 +87,7 @@ export const QuizApp: React.FC = () => {
     if (speechSynthRef.current) {
       speechSynthRef.current.cancel();
       setIsPlaying(false);
+      setCurrentSpokenText("");
     }
     if (currentUtteranceRef.current) {
       currentUtteranceRef.current = null;
@@ -127,6 +130,9 @@ export const QuizApp: React.FC = () => {
       utterance.pitch = 1;
       utterance.volume = 1;
 
+      // Set current spoken text for lip syncing
+      setCurrentSpokenText(text);
+
       // Tìm giọng nói được chọn
       const voices = speechSynthRef.current.getVoices();
       const voiceToUse = voiceName || selectedVoice;
@@ -166,12 +172,14 @@ export const QuizApp: React.FC = () => {
       utterance.onend = () => {
         setIsPlaying(false);
         currentUtteranceRef.current = null;
+        setCurrentSpokenText(""); // Clear text when done speaking
       };
 
       utterance.onerror = (event) => {
         console.error("Speech synthesis error:", event);
         setIsPlaying(false);
         currentUtteranceRef.current = null;
+        setCurrentSpokenText(""); // Clear text on error
         message.error("Lỗi phát âm thanh. Vui lòng thử lại với giọng khác.");
       };
 
@@ -255,6 +263,9 @@ export const QuizApp: React.FC = () => {
 
     if (isAnswerCorrect(userAnswer, currentQuestion.answer)) {
       setCorrectAnswers((prev) => [...prev, currentQuestion.id]);
+      message.success("🎉 Chính xác! Câu trả lời đúng!");
+    } else {
+      message.error("❌ Câu trả lời chưa chính xác. Hãy thử lại!");
     }
   };
 
@@ -290,6 +301,15 @@ export const QuizApp: React.FC = () => {
       <Layout>
         <Sider width={300} style={{ background: "#fff", padding: "20px" }}>
           <Space direction="vertical" style={{ width: "100%" }} size="large">
+            {/* Lip Sync Face Component */}
+            <Card title="Khuôn mặt đồng bộ hóa" size="small">
+              <LipSyncFace
+                isSpeaking={isPlaying}
+                text={currentSpokenText}
+                emotion={isPlaying ? "happy" : "neutral"}
+              />
+            </Card>
+
             <VoiceSelector
               selectedVoice={selectedVoice}
               onVoiceChange={handleVoiceChange}
@@ -374,6 +394,10 @@ export const QuizApp: React.FC = () => {
                       Bạn đã trả lời tất cả {questions.length} câu hỏi. Nhấn
                       "Làm mới" để bắt đầu lại.
                     </Text>
+                    <br />
+                    <Text strong style={{ fontSize: "16px", color: "#1890ff" }}>
+                      Điểm số cuối cùng: {score}%
+                    </Text>
                   </div>
                 </Card>
               )}
@@ -418,6 +442,9 @@ export const QuizApp: React.FC = () => {
                   <Text>4. Nhấn "Kiểm tra đáp án" để xem kết quả</Text>
                   <Text>
                     5. Nhấn "Nghe đáp án" để nghe đáp án đúng bằng tiếng Anh
+                  </Text>
+                  <Text>
+                    6. Quan sát khuôn mặt đồng bộ hóa để theo dõi phát âm
                   </Text>
                 </Space>
               </Card>

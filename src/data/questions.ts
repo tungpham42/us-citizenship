@@ -43,7 +43,7 @@ export const questions: Question[] = [
   {
     id: 7,
     question: "How many amendments does the Constitution have?",
-    answer: "Twenty-seven (27)",
+    answer: "Twenty-seven, 27",
     category: "Principles of American Democracy",
   },
   {
@@ -114,13 +114,13 @@ export const questions: Question[] = [
   {
     id: 18,
     question: "How many U.S. Senators are there?",
-    answer: "One hundred (100)",
+    answer: "One hundred, 100",
     category: "System of Government",
   },
   {
     id: 19,
     question: "We elect a U.S. Senator for how many years?",
-    answer: "Six (6)",
+    answer: "Six, 6",
     category: "System of Government",
   },
   {
@@ -132,13 +132,13 @@ export const questions: Question[] = [
   {
     id: 21,
     question: "The House of Representatives has how many voting members?",
-    answer: "Four hundred thirty-five (435)",
+    answer: "Four hundred thirty-five, 435",
     category: "System of Government",
   },
   {
     id: 22,
     question: "We elect a U.S. Representative for how many years?",
-    answer: "Two (2)",
+    answer: "Two, 2",
     category: "System of Government",
   },
   {
@@ -163,7 +163,7 @@ export const questions: Question[] = [
   {
     id: 26,
     question: "We elect a President for how many years?",
-    answer: "Four (4)",
+    answer: "Four, 4",
     category: "System of Government",
   },
   {
@@ -245,7 +245,7 @@ export const questions: Question[] = [
   {
     id: 39,
     question: "How many justices are on the Supreme Court?",
-    answer: "Nine (9)",
+    answer: "Nine, 9",
     category: "System of Government",
   },
   {
