@@ -185,18 +185,24 @@ export const VoiceSelector: React.FC<VoiceSelectorProps> = ({
                   justifyContent: "space-between",
                   alignItems: "center",
                   padding: "4px 0",
+                  flexWrap: "wrap",
                 }}
               >
                 <Radio value={voice.name}>
-                  <div style={{ fontSize: "12px" }}>
+                  <div style={{ fontSize: "clamp(11px, 2.5vw, 12px)" }}>
                     <div>
                       {voice.gender === "female"
                         ? "👩 Giọng Nữ"
                         : "👨 Giọng Nam"}
                     </div>
-                    <div style={{ color: "#666", fontSize: "11px" }}>
-                      {voice.name.length > 25
-                        ? `${voice.name.substring(0, 25)}...`
+                    <div
+                      style={{
+                        color: "#666",
+                        fontSize: "clamp(10px, 2.5vw, 11px)",
+                      }}
+                    >
+                      {voice.name.length > 20
+                        ? `${voice.name.substring(0, 20)}...`
                         : voice.name}
                     </div>
                   </div>
@@ -213,7 +219,13 @@ export const VoiceSelector: React.FC<VoiceSelectorProps> = ({
           </Space>
         </Radio.Group>
 
-        <div style={{ fontSize: "12px", color: "#666", marginTop: "8px" }}>
+        <div
+          style={{
+            fontSize: "clamp(10px, 2.5vw, 12px)",
+            color: "#666",
+            marginTop: "8px",
+          }}
+        >
           💡 Nhấn vào nút loa để nghe thử giọng
         </div>
       </Space>

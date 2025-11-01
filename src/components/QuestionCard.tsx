@@ -44,9 +44,16 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
   return (
     <Card
       title={
-        <Space>
-          <span>Câu hỏi #{question.id}</span>
-          <Text type="secondary">({question.category})</Text>
+        <Space wrap>
+          <span style={{ fontSize: "clamp(14px, 3vw, 16px)" }}>
+            Câu hỏi #{question.id}
+          </span>
+          <Text
+            type="secondary"
+            style={{ fontSize: "clamp(12px, 2.5vw, 14px)" }}
+          >
+            ({question.category})
+          </Text>
         </Space>
       }
       extra={
@@ -55,16 +62,21 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
           onClick={() => onSpeak(question.question)}
           type="text"
           loading={isPlaying}
+          size={window.innerWidth < 480 ? "small" : "middle"}
         >
-          {isPlaying ? "Đang phát..." : "Nghe câu hỏi"}
+          {isPlaying ? "Đang phát..." : "Nghe"}
         </Button>
       }
     >
-      <Title level={4}>{question.question}</Title>
+      <Title level={4} style={{ fontSize: "clamp(16px, 4vw, 20px)" }}>
+        {question.question}
+      </Title>
 
       <Space direction="vertical" style={{ width: "100%" }} size="large">
         <div>
-          <Text strong>Trả lời của bạn:</Text>
+          <Text strong style={{ fontSize: "clamp(14px, 3vw, 16px)" }}>
+            Trả lời của bạn:
+          </Text>
           <br />
           <input
             type="text"
@@ -73,8 +85,8 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
             placeholder="Nhập câu trả lời của bạn..."
             style={{
               width: "100%",
-              padding: "8px",
-              fontSize: "16px",
+              padding: "12px",
+              fontSize: "clamp(14px, 3vw, 16px)",
               marginTop: "8px",
               border: "1px solid #d9d9d9",
               borderRadius: "6px",

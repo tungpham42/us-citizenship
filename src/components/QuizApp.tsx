@@ -287,20 +287,41 @@ export const QuizApp: React.FC = () => {
       ? Math.round((correctAnswers.length / answeredQuestions.length) * 100)
       : 0;
 
-  return (
+   return (
     <Layout style={{ minHeight: "100vh" }}>
-      <Header style={{ background: "#001529", padding: "0 20px" }}>
+      <Header style={{ 
+        background: "#001529", 
+        padding: "0 16px",
+        height: "auto",
+        minHeight: "64px"
+      }}>
         <Title
           level={2}
-          style={{ color: "white", margin: 0, lineHeight: "64px" }}
+          style={{ 
+            color: "white", 
+            margin: 0, 
+            lineHeight: "1.4",
+            padding: "12px 0",
+            fontSize: "clamp(18px, 5vw, 24px)",
+            textAlign: "center"
+          }}
         >
           🇺🇸 Luyện Thi Quốc Tịch Hoa Kỳ
         </Title>
       </Header>
 
-      <Layout>
-        <Sider width={300} style={{ background: "#fff", padding: "20px" }}>
-          <Space direction="vertical" style={{ width: "100%" }} size="large">
+      <Layout style={{ flexDirection: window.innerWidth < 768 ? "column" : "row" }}>
+        <Sider 
+          width={window.innerWidth < 768 ? "100%" : 300}
+          style={{ 
+            background: "#fff", 
+            padding: "16px",
+            height: window.innerWidth < 768 ? "auto" : "auto"
+          }}
+          breakpoint="lg"
+          collapsedWidth="0"
+        >
+          <Space direction="vertical" style={{ width: "100%" }} size="middle">
             {/* Lip Sync Face Component */}
             <Card title="Khuôn mặt đồng bộ hóa" size="small">
               <LipSyncFace
@@ -335,6 +356,7 @@ export const QuizApp: React.FC = () => {
                   icon={<ReloadOutlined />}
                   onClick={resetQuiz}
                   block
+                  size={window.innerWidth < 768 ? "middle" : "small"}
                 >
                   Làm mới
                 </Button>
@@ -347,6 +369,7 @@ export const QuizApp: React.FC = () => {
                   }
                   block
                   disabled={!currentQuestion}
+                  size={window.innerWidth < 768 ? "middle" : "small"}
                 >
                   {isPlaying ? "Dừng" : "Nghe câu hỏi"}
                 </Button>
@@ -355,19 +378,19 @@ export const QuizApp: React.FC = () => {
 
             <Card title="Phân loại câu hỏi" size="small">
               <Space direction="vertical" style={{ width: "100%" }}>
-                <Text style={{ fontSize: "12px" }}>
+                <Text style={{ fontSize: "clamp(11px, 2.5vw, 12px)" }}>
                   Principles of American Democracy: 12 câu
                 </Text>
-                <Text style={{ fontSize: "12px" }}>
+                <Text style={{ fontSize: "clamp(11px, 2.5vw, 12px)" }}>
                   System of Government: 35 câu
                 </Text>
-                <Text style={{ fontSize: "12px" }}>
+                <Text style={{ fontSize: "clamp(11px, 2.5vw, 12px)" }}>
                   Rights and Responsibilities: 10 câu
                 </Text>
-                <Text style={{ fontSize: "12px" }}>
+                <Text style={{ fontSize: "clamp(11px, 2.5vw, 12px)" }}>
                   American History: 48 câu
                 </Text>
-                <Text style={{ fontSize: "12px" }}>
+                <Text style={{ fontSize: "clamp(11px, 2.5vw, 12px)" }}>
                   Integrated Civics: 20 câu
                 </Text>
               </Space>
@@ -375,7 +398,7 @@ export const QuizApp: React.FC = () => {
           </Space>
         </Sider>
 
-        <Content style={{ padding: "20px" }}>
+        <Content style={{ padding: "16px", flex: 1 }}>
           <Row justify="center">
             <Col xs={24} lg={18}>
               {currentQuestion ? (
@@ -388,27 +411,33 @@ export const QuizApp: React.FC = () => {
                 />
               ) : (
                 <Card>
-                  <div style={{ textAlign: "center", padding: "40px" }}>
-                    <Title level={3}>🎉 Hoàn thành!</Title>
-                    <Text>
+                  <div style={{ textAlign: "center", padding: "20px" }}>
+                    <Title level={3} style={{ fontSize: "clamp(18px, 5vw, 24px)" }}>🎉 Hoàn thành!</Title>
+                    <Text style={{ fontSize: "clamp(14px, 3vw, 16px)" }}>
                       Bạn đã trả lời tất cả {questions.length} câu hỏi. Nhấn
                       "Làm mới" để bắt đầu lại.
                     </Text>
                     <br />
-                    <Text strong style={{ fontSize: "16px", color: "#1890ff" }}>
+                    <Text strong style={{ fontSize: "clamp(14px, 3vw, 16px)", color: "#1890ff" }}>
                       Điểm số cuối cùng: {score}%
                     </Text>
                   </div>
                 </Card>
               )}
 
-              <Card style={{ marginTop: "20px" }}>
-                <Row justify="space-between" align="middle">
+              <Card style={{ marginTop: "16px" }}>
+                <Row 
+                  justify="space-between" 
+                  align="middle"
+                  gutter={[8, 8]}
+                  style={{ flexDirection: window.innerWidth < 480 ? "column" : "row" }}
+                >
                   <Col>
                     <Button
-                      size="large"
+                      size={window.innerWidth < 480 ? "middle" : "large"}
                       onClick={handleNextQuestion}
                       disabled={!currentQuestion}
+                      block={window.innerWidth < 480}
                     >
                       Câu hỏi tiếp theo
                     </Button>
@@ -416,11 +445,12 @@ export const QuizApp: React.FC = () => {
                   <Col>
                     <Button
                       type="primary"
-                      size="large"
+                      size={window.innerWidth < 480 ? "middle" : "large"}
                       onClick={handleCheckAnswer}
                       disabled={
                         !userAnswer.trim() || showAnswer || !currentQuestion
                       }
+                      block={window.innerWidth < 480}
                     >
                       Kiểm tra đáp án
                     </Button>
@@ -429,21 +459,24 @@ export const QuizApp: React.FC = () => {
               </Card>
 
               {/* Hướng dẫn sử dụng */}
-              <Card title="Hướng dẫn sử dụng" style={{ marginTop: "20px" }}>
+              <Card title="Hướng dẫn sử dụng" style={{ marginTop: "16px" }}>
                 <Space direction="vertical">
-                  <Text>
-                    1. Chọn giọng đọc phù hợp ở bên trái (nhấn nút loa để nghe
-                    thử)
+                  <Text style={{ fontSize: "clamp(12px, 3vw, 14px)" }}>
+                    1. Chọn giọng đọc phù hợp ở bên trái (nhấn nút loa để nghe thử)
                   </Text>
-                  <Text>
+                  <Text style={{ fontSize: "clamp(12px, 3vw, 14px)" }}>
                     2. Nhấn "Nghe câu hỏi" để nghe câu hỏi bằng tiếng Anh
                   </Text>
-                  <Text>3. Nhập câu trả lời của bạn vào ô trống</Text>
-                  <Text>4. Nhấn "Kiểm tra đáp án" để xem kết quả</Text>
-                  <Text>
+                  <Text style={{ fontSize: "clamp(12px, 3vw, 14px)" }}>
+                    3. Nhập câu trả lời của bạn vào ô trống
+                  </Text>
+                  <Text style={{ fontSize: "clamp(12px, 3vw, 14px)" }}>
+                    4. Nhấn "Kiểm tra đáp án" để xem kết quả
+                  </Text>
+                  <Text style={{ fontSize: "clamp(12px, 3vw, 14px)" }}>
                     5. Nhấn "Nghe đáp án" để nghe đáp án đúng bằng tiếng Anh
                   </Text>
-                  <Text>
+                  <Text style={{ fontSize: "clamp(12px, 3vw, 14px)" }}>
                     6. Quan sát khuôn mặt đồng bộ hóa để theo dõi phát âm
                   </Text>
                 </Space>
