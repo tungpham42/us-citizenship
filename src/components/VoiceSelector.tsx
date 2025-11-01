@@ -1,21 +1,41 @@
 import React, { useState, useEffect } from "react";
-import { Radio, Space, Card, Button, Alert } from "antd";
-import { SoundOutlined } from "@ant-design/icons";
+import {
+  Radio,
+  Space,
+  Card,
+  Button,
+  Alert,
+  Modal,
+  Typography,
+  Slider,
+} from "antd";
+import { SoundOutlined, UserOutlined } from "@ant-design/icons";
 import { VoiceOption } from "../types";
+import { GeminiService } from "../services/geminiService";
+
+const { Text } = Typography;
 
 interface VoiceSelectorProps {
   selectedVoice: string;
   onVoiceChange: (voice: string) => void;
   onTestVoice: (voiceName: string) => void;
+  geminiService?: GeminiService | null;
 }
 
 export const VoiceSelector: React.FC<VoiceSelectorProps> = ({
   selectedVoice,
   onVoiceChange,
   onTestVoice,
+  geminiService,
 }) => {
   const [availableVoices, setAvailableVoices] = useState<VoiceOption[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [showAIModal, setShowAIModal] = useState(false);
+  const [voiceSettings, setVoiceSettings] = useState({
+    rate: 0.8,
+    pitch: 1,
+    volume: 1,
+  });
 
   // Lấy danh sách giọng nói có sẵn
   useEffect(() => {
@@ -168,8 +188,20 @@ export const VoiceSelector: React.FC<VoiceSelectorProps> = ({
     );
   }
 
+  const handleAIVoicePractice = async () => {
+    if (!geminiService) return;
+
+    try {
+      const question = await geminiService.generatePracticeQuestion();
+      // Speak the AI-generated question
+      onTestVoice(question);
+    } catch (error) {
+      console.error("Error generating AI question:", error);
+    }
+  };
+
   return (
-    <Card title="Chọn giọng đọc" size="small">
+    <Card title="Chọn giọng đọc & AI" size="small">
       <Space direction="vertical" style={{ width: "100%" }}>
         <Radio.Group
           value={selectedVoice}
@@ -207,17 +239,42 @@ export const VoiceSelector: React.FC<VoiceSelectorProps> = ({
                     </div>
                   </div>
                 </Radio>
-                <Button
-                  size="small"
-                  type="text"
-                  icon={<SoundOutlined />}
-                  onClick={() => onTestVoice(voice.name)}
-                  style={{ marginLeft: "8px" }}
-                />
+                <Space>
+                  <Button
+                    size="small"
+                    type="text"
+                    icon={<SoundOutlined />}
+                    onClick={() => onTestVoice(voice.name)}
+                    style={{ marginLeft: "8px" }}
+                  />
+                  {geminiService && (
+                    <Button
+                      size="small"
+                      type="text"
+                      icon={<UserOutlined />}
+                      onClick={handleAIVoicePractice}
+                      title="Luyện tập với AI"
+                    />
+                  )}
+                </Space>
               </div>
             ))}
           </Space>
         </Radio.Group>
+
+        {/* Voice Settings */}
+        <div style={{ marginTop: "16px" }}>
+          <Text strong>Tốc độ: {voiceSettings.rate.toFixed(1)}</Text>
+          <Slider
+            min={0.5}
+            max={2}
+            step={0.1}
+            value={voiceSettings.rate}
+            onChange={(value) =>
+              setVoiceSettings((prev) => ({ ...prev, rate: value }))
+            }
+          />
+        </div>
 
         <div
           style={{
@@ -227,8 +284,19 @@ export const VoiceSelector: React.FC<VoiceSelectorProps> = ({
           }}
         >
           💡 Nhấn vào nút loa để nghe thử giọng
+          <br />
+          🤖 Nhấn nút AI để luyện tập với câu hỏi thông minh
         </div>
       </Space>
+
+      <Modal
+        title="Luyện tập phát âm với AI"
+        open={showAIModal}
+        onCancel={() => setShowAIModal(false)}
+        footer={null}
+      >
+        <p>Tính năng đang phát triển...</p>
+      </Modal>
     </Card>
   );
 };

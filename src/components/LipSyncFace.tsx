@@ -4,7 +4,17 @@ import { Space } from "antd";
 interface LipSyncFaceProps {
   isSpeaking: boolean;
   text?: string;
-  emotion?: "neutral" | "happy" | "surprised";
+  emotion?:
+    | "neutral"
+    | "happy"
+    | "surprised"
+    | "thinking"
+    | "correct"
+    | "incorrect";
+  aiAnalysis?: {
+    confidence: number;
+    emotion: string;
+  };
 }
 
 export const LipSyncFace: React.FC<LipSyncFaceProps> = ({
