@@ -119,14 +119,6 @@ export const VoiceSelector: React.FC<VoiceSelectorProps> = ({
           }
         }
 
-        // Thêm giọng mặc định nếu không tìm thấy giọng nào
-        if (voiceOptions.length === 0) {
-          voiceOptions.push(
-            { name: "Default Female", lang: "en-US", gender: "female" },
-            { name: "Default Male", lang: "en-US", gender: "male" }
-          );
-        }
-
         setAvailableVoices(voiceOptions);
 
         // Tự động chọn giọng đầu tiên nếu chưa có giọng nào được chọn
