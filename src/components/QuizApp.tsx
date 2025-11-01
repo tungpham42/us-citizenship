@@ -1,4 +1,3 @@
-// QuizApp.tsx
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import {
   Layout,
@@ -11,24 +10,17 @@ import {
   Progress,
   Card,
   message,
-  Modal,
-  Form,
-  Input,
-  Alert,
 } from "antd";
 import {
   PauseCircleOutlined,
   SoundOutlined,
   ReloadOutlined,
-  RobotOutlined,
-  BulbOutlined,
 } from "@ant-design/icons";
 import { questions } from "../data/questions";
 import { QuestionCard } from "./QuestionCard";
 import { VoiceSelector } from "./VoiceSelector";
 import { LipSyncFace } from "./LipSyncFace";
 import { Question, VoiceOption } from "../types";
-import { GeminiService } from "../services/geminiService";
 
 const { Header, Content, Sider } = Layout;
 const { Title, Text } = Typography;
@@ -41,31 +33,20 @@ export const QuizApp: React.FC = () => {
   const [answeredQuestions, setAnsweredQuestions] = useState<number[]>([]);
   const [correctAnswers, setCorrectAnswers] = useState<number[]>([]);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [availableVoices, setAvailableVoices] = useState<VoiceOption[]>([]); // eslint-disable-line
   const [currentSpokenText, setCurrentSpokenText] = useState("");
-  const [geminiService, setGeminiService] = useState<GeminiService | null>(
-    null
-  );
-  const [showAIConfig, setShowAIConfig] = useState(false);
-  const [aiExplanation, setAiExplanation] = useState("");
-  const [isAILoading, setIsAILoading] = useState(false);
-  const [aiEmotion, setAiEmotion] = useState<
-    "neutral" | "happy" | "surprised" | "thinking" | "correct" | "incorrect"
-  >("neutral");
 
   const speechSynthRef = useRef<SpeechSynthesis | null>(null);
   const currentUtteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
 
-  // Initialize speech synthesis and voices
+  // Khởi tạo speech synthesis và giọng nói
   useEffect(() => {
     speechSynthRef.current = window.speechSynthesis;
 
     const loadVoices = () => {
       const voices = window.speechSynthesis.getVoices();
       const englishVoices = voices
-        .filter(
-          (voice) =>
-            voice.lang.startsWith("en-") || voice.lang.startsWith("en_")
-        )
+        .filter((voice) => voice.lang.startsWith("en-"))
         .map((voice) => {
           const gender: VoiceOption["gender"] = voice.name
             .toLowerCase()
@@ -78,6 +59,8 @@ export const QuizApp: React.FC = () => {
             gender,
           };
         });
+
+      setAvailableVoices(englishVoices);
 
       if (englishVoices.length > 0 && !selectedVoice) {
         setSelectedVoice(englishVoices[0].name);
@@ -95,22 +78,7 @@ export const QuizApp: React.FC = () => {
     };
   }, [selectedVoice]);
 
-  // Initialize Gemini API
-  useEffect(() => {
-    const savedApiKey = localStorage.getItem("gemini_api_key");
-    if (savedApiKey) {
-      try {
-        const service = new GeminiService(savedApiKey);
-        setGeminiService(service);
-        message.success("Đã kết nối AI thành công!");
-      } catch (error) {
-        console.error("Error initializing Gemini:", error);
-        message.error("Lỗi kết nối AI. Vui lòng kiểm tra lại API key.");
-      }
-    }
-  }, []);
-
-  // Initialize first question
+  // Khởi tạo câu hỏi đầu tiên
   useEffect(() => {
     getRandomQuestion();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -127,11 +95,10 @@ export const QuizApp: React.FC = () => {
   }, []);
 
   const getRandomQuestion = useCallback(() => {
-    // If all questions have been answered, show completion message
+    // If all questions have been answered, show a completion message and reset
     if (answeredQuestions.length >= questions.length) {
       message.success("🎉 Chúc mừng! Bạn đã hoàn thành tất cả các câu hỏi!");
       setCurrentQuestion(null);
-      setAiExplanation("");
       return;
     }
 
@@ -147,8 +114,6 @@ export const QuizApp: React.FC = () => {
     setCurrentQuestion(question);
     setUserAnswer("");
     setShowAnswer(false);
-    setAiExplanation("");
-    setAiEmotion("neutral");
     stopSpeaking();
   }, [answeredQuestions, stopSpeaking]);
 
@@ -156,33 +121,33 @@ export const QuizApp: React.FC = () => {
     (text: string, voiceName?: string) => {
       if (!speechSynthRef.current) return;
 
-      // Stop current speech
+      // Dừng giọng nói hiện tại
       stopSpeaking();
 
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.lang = "en-US";
-      utterance.rate = 0.8;
+      utterance.rate = 0.8; // Tốc độ chậm cho người cao niên
       utterance.pitch = 1;
       utterance.volume = 1;
 
       // Set current spoken text for lip syncing
       setCurrentSpokenText(text);
 
-      // Find selected voice
+      // Tìm giọng nói được chọn
       const voices = speechSynthRef.current.getVoices();
       const voiceToUse = voiceName || selectedVoice;
 
-      // Find matching voice
+      // Tìm giọng phù hợp
       let selectedVoiceObj = voices.find((voice) => voice.name === voiceToUse);
 
-      // If not found exactly, find voice containing the name
+      // Nếu không tìm thấy chính xác, tìm giọng có chứa tên
       if (!selectedVoiceObj) {
         selectedVoiceObj = voices.find((voice) =>
           voice.name.toLowerCase().includes(voiceToUse.toLowerCase())
         );
       }
 
-      // Prefer English voices
+      // Ưu tiên giọng tiếng Anh
       if (!selectedVoiceObj) {
         selectedVoiceObj = voices.find(
           (voice) =>
@@ -190,7 +155,7 @@ export const QuizApp: React.FC = () => {
         );
       }
 
-      // Fallback: first available voice
+      // Fallback: giọng đầu tiên có sẵn
       if (!selectedVoiceObj && voices.length > 0) {
         selectedVoiceObj = voices[0];
       }
@@ -207,14 +172,14 @@ export const QuizApp: React.FC = () => {
       utterance.onend = () => {
         setIsPlaying(false);
         currentUtteranceRef.current = null;
-        setCurrentSpokenText("");
+        setCurrentSpokenText(""); // Clear text when done speaking
       };
 
       utterance.onerror = (event) => {
         console.error("Speech synthesis error:", event);
         setIsPlaying(false);
         currentUtteranceRef.current = null;
-        setCurrentSpokenText("");
+        setCurrentSpokenText(""); // Clear text on error
         message.error("Lỗi phát âm thanh. Vui lòng thử lại với giọng khác.");
       };
 
@@ -245,150 +210,62 @@ export const QuizApp: React.FC = () => {
     [speakText]
   );
 
-  const handleAIConfig = (values: { apiKey: string }) => {
-    try {
-      const service = new GeminiService(values.apiKey);
-      setGeminiService(service);
-      localStorage.setItem("gemini_api_key", values.apiKey);
-      setShowAIConfig(false);
-      message.success("Đã kết nối AI thành công!");
-    } catch (error) {
-      console.error("Error configuring Gemini:", error);
-      message.error("Lỗi kết nối AI. Vui lòng kiểm tra API key.");
-    }
-  };
-
-  const handleCheckAnswer = async () => {
+  const handleCheckAnswer = () => {
     if (!currentQuestion) return;
 
     setShowAnswer(true);
     setAnsweredQuestions((prev) => [...prev, currentQuestion.id]);
-    setAiEmotion("thinking");
 
-    let isCorrect = false;
+    // Enhanced answer matching logic
+    const isAnswerCorrect = (userAnswer: string, correctAnswer: string) => {
+      const userAnswerNormalized = userAnswer.toLowerCase().trim();
+      const correctAnswerNormalized = correctAnswer.toLowerCase();
 
-    // Use AI evaluation if available
-    if (geminiService) {
-      setIsAILoading(true);
-      try {
-        const evaluation = await geminiService.evaluateAnswer(
-          currentQuestion.question,
-          userAnswer,
-          currentQuestion.answer
-        );
+      // Split by commas and clean up each part
+      const correctAnswerParts = correctAnswerNormalized
+        .split(",")
+        .map((part) => part.trim().replace(/\.$/, "")); // Remove trailing periods
 
-        isCorrect = evaluation.isCorrect;
-        setAiExplanation(evaluation.explanation);
-        setAiEmotion(isCorrect ? "correct" : "incorrect");
-
-        if (isCorrect) {
-          setCorrectAnswers((prev) => [...prev, currentQuestion.id]);
-          message.success(`🎉 Chính xác! ${evaluation.explanation}`);
-        } else {
-          message.error(`❌ ${evaluation.explanation}`);
-        }
-      } catch (error) {
-        console.error("AI evaluation error:", error);
-        // Fallback to basic evaluation
-        isCorrect = handleBasicEvaluation(userAnswer, currentQuestion.answer);
-        handleBasicResult(isCorrect);
-        setAiExplanation("AI đang bận, sử dụng đánh giá cơ bản...");
-      } finally {
-        setIsAILoading(false);
+      // Check direct match first
+      if (correctAnswerParts.some((part) => userAnswerNormalized === part)) {
+        return true;
       }
-    } else {
-      // Basic evaluation without AI
-      isCorrect = handleBasicEvaluation(userAnswer, currentQuestion.answer);
-      handleBasicResult(isCorrect);
-      setAiEmotion(isCorrect ? "correct" : "incorrect");
-    }
-  };
 
-  const handleBasicEvaluation = (
-    userAnswer: string,
-    correctAnswer: string
-  ): boolean => {
-    const userAnswerNormalized = userAnswer.toLowerCase().trim();
-    const correctAnswerNormalized = correctAnswer.toLowerCase();
+      // Check if user's answer contains any correct part
+      if (
+        correctAnswerParts.some((part) => userAnswerNormalized.includes(part))
+      ) {
+        return true;
+      }
 
-    // Split by commas and clean up each part
-    const correctAnswerParts = correctAnswerNormalized
-      .split(",")
-      .map((part) => part.trim().replace(/\.$/, ""));
+      // Check if any correct part contains user's answer
+      if (
+        correctAnswerParts.some((part) => part.includes(userAnswerNormalized))
+      ) {
+        return true;
+      }
 
-    // Check direct match first
-    if (correctAnswerParts.some((part) => userAnswerNormalized === part)) {
-      return true;
-    }
+      // For answers with "or" alternatives
+      const orParts = correctAnswerNormalized
+        .split(" or ")
+        .map((part) => part.trim());
+      if (
+        orParts.some(
+          (part) =>
+            userAnswerNormalized === part || part.includes(userAnswerNormalized)
+        )
+      ) {
+        return true;
+      }
 
-    // Check if user's answer contains any correct part
-    if (
-      correctAnswerParts.some((part) => userAnswerNormalized.includes(part))
-    ) {
-      return true;
-    }
+      return false;
+    };
 
-    // Check if any correct part contains user's answer
-    if (
-      correctAnswerParts.some((part) => part.includes(userAnswerNormalized))
-    ) {
-      return true;
-    }
-
-    // For answers with "or" alternatives
-    const orParts = correctAnswerNormalized
-      .split(" or ")
-      .map((part) => part.trim());
-    if (
-      orParts.some(
-        (part) =>
-          userAnswerNormalized === part || part.includes(userAnswerNormalized)
-      )
-    ) {
-      return true;
-    }
-
-    return false;
-  };
-
-  const handleBasicResult = (isCorrect: boolean) => {
-    if (isCorrect) {
-      setCorrectAnswers((prev) => [...prev, currentQuestion!.id]);
+    if (isAnswerCorrect(userAnswer, currentQuestion.answer)) {
+      setCorrectAnswers((prev) => [...prev, currentQuestion.id]);
       message.success("🎉 Chính xác! Câu trả lời đúng!");
     } else {
       message.error("❌ Câu trả lời chưa chính xác. Hãy thử lại!");
-    }
-  };
-
-  const generateAIQuestion = async (category?: string) => {
-    if (!geminiService) {
-      message.warning("Vui lòng cấu hình API key Gemini trước!");
-      setShowAIConfig(true);
-      return;
-    }
-
-    setIsAILoading(true);
-    setAiEmotion("thinking");
-    try {
-      const aiQuestion = await geminiService.generatePracticeQuestion(category);
-      const newQuestion: Question = {
-        id: Date.now(), // Temporary ID for AI questions
-        question: aiQuestion,
-        answer: "Câu trả lời sẽ được AI đánh giá dựa trên ngữ cảnh",
-        category: category || "AI Generated",
-      };
-
-      setCurrentQuestion(newQuestion);
-      setUserAnswer("");
-      setShowAnswer(false);
-      setAiExplanation("");
-      message.success("Đã tạo câu hỏi thông minh từ AI!");
-    } catch (error) {
-      console.error("Error generating AI question:", error);
-      message.error("Lỗi tạo câu hỏi AI. Vui lòng thử lại.");
-    } finally {
-      setIsAILoading(false);
-      setAiEmotion("neutral");
     }
   };
 
@@ -401,8 +278,6 @@ export const QuizApp: React.FC = () => {
     setCorrectAnswers([]);
     getRandomQuestion();
     stopSpeaking();
-    setAiExplanation("");
-    setAiEmotion("neutral");
     message.info("Đã làm mới bài kiểm tra!");
   };
 
@@ -422,40 +297,19 @@ export const QuizApp: React.FC = () => {
           minHeight: "64px",
         }}
       >
-        <div
+        <Title
+          level={2}
           style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            flexWrap: "wrap",
+            color: "white",
+            margin: 0,
+            lineHeight: "1.4",
+            padding: "12px 0",
+            fontSize: "clamp(18px, 5vw, 24px)",
+            textAlign: "center",
           }}
         >
-          <Title
-            level={2}
-            style={{
-              color: "white",
-              margin: 0,
-              lineHeight: "1.4",
-              padding: "12px 0",
-              fontSize: "clamp(18px, 5vw, 24px)",
-            }}
-          >
-            🇺🇸 Luyện Thi Quốc Tịch Hoa Kỳ
-          </Title>
-          <Button
-            icon={<RobotOutlined />}
-            onClick={() => setShowAIConfig(true)}
-            type={geminiService ? "default" : "dashed"}
-            style={{
-              color: geminiService ? "#52c41a" : "#ffa940",
-              borderColor: geminiService ? "#52c41a" : "#ffa940",
-              margin: "8px 0",
-            }}
-            size={window.innerWidth < 768 ? "middle" : "large"}
-          >
-            {geminiService ? "🤖 AI Đã Kết Nối" : "🔌 Kết Nối AI"}
-          </Button>
-        </div>
+          🇺🇸 Luyện Thi Quốc Tịch Hoa Kỳ
+        </Title>
       </Header>
 
       <Layout
@@ -477,7 +331,7 @@ export const QuizApp: React.FC = () => {
               <LipSyncFace
                 isSpeaking={isPlaying}
                 text={currentSpokenText}
-                emotion={aiEmotion}
+                emotion={isPlaying ? "happy" : "neutral"}
               />
             </Card>
 
@@ -485,28 +339,7 @@ export const QuizApp: React.FC = () => {
               selectedVoice={selectedVoice}
               onVoiceChange={handleVoiceChange}
               onTestVoice={handleTestVoice}
-              geminiService={geminiService}
             />
-
-            {/* AI Features Card */}
-            {geminiService && (
-              <Card title="Tính năng AI" size="small">
-                <Space direction="vertical" style={{ width: "100%" }}>
-                  <Button
-                    icon={<BulbOutlined />}
-                    onClick={() => generateAIQuestion()}
-                    loading={isAILoading}
-                    block
-                    size={window.innerWidth < 768 ? "middle" : "small"}
-                  >
-                    Câu hỏi Thông minh
-                  </Button>
-                  <Text style={{ fontSize: "clamp(10px, 2.5vw, 12px)" }}>
-                    🤖 AI sẽ tạo câu hỏi mới và đánh giá câu trả lời của bạn
-                  </Text>
-                </Space>
-              </Card>
-            )}
 
             <Card title="Thống kê" size="small">
               <Space direction="vertical" style={{ width: "100%" }}>
@@ -517,13 +350,6 @@ export const QuizApp: React.FC = () => {
                   suffix={`/ ${questions.length}`}
                 />
                 <Progress percent={Math.round(progress)} />
-                {geminiService && (
-                  <div style={{ marginTop: "8px" }}>
-                    <Text style={{ fontSize: "12px", color: "#52c41a" }}>
-                      🤖 AI đang hoạt động
-                    </Text>
-                  </div>
-                )}
               </Space>
             </Card>
 
@@ -580,31 +406,13 @@ export const QuizApp: React.FC = () => {
           <Row justify="center">
             <Col xs={24} lg={18}>
               {currentQuestion ? (
-                <>
-                  <QuestionCard
-                    question={currentQuestion}
-                    userAnswer={userAnswer}
-                    showAnswer={showAnswer}
-                    onAnswerChange={setUserAnswer}
-                    onSpeak={speakText}
-                    isPlaying={isPlaying}
-                  />
-
-                  {/* AI Explanation */}
-                  {aiExplanation && (
-                    <Card
-                      style={{ marginTop: "16px" }}
-                      title="📝 Giải thích từ AI"
-                      size="small"
-                    >
-                      <Alert
-                        message={aiExplanation}
-                        type={aiEmotion === "correct" ? "success" : "error"}
-                        showIcon
-                      />
-                    </Card>
-                  )}
-                </>
+                <QuestionCard
+                  question={currentQuestion}
+                  userAnswer={userAnswer}
+                  showAnswer={showAnswer}
+                  onAnswerChange={setUserAnswer}
+                  onSpeak={speakText}
+                />
               ) : (
                 <Card>
                   <div style={{ textAlign: "center", padding: "20px" }}>
@@ -628,18 +436,6 @@ export const QuizApp: React.FC = () => {
                     >
                       Điểm số cuối cùng: {score}%
                     </Text>
-                    {geminiService && (
-                      <div style={{ marginTop: "16px" }}>
-                        <Text
-                          style={{
-                            fontSize: "clamp(12px, 3vw, 14px)",
-                            color: "#52c41a",
-                          }}
-                        >
-                          🤖 Sử dụng tính năng AI để tạo câu hỏi mới!
-                        </Text>
-                      </div>
-                    )}
                   </div>
                 </Card>
               )}
@@ -657,11 +453,10 @@ export const QuizApp: React.FC = () => {
                     <Button
                       size={window.innerWidth < 480 ? "middle" : "large"}
                       onClick={handleNextQuestion}
-                      disabled={!currentQuestion || isAILoading}
+                      disabled={!currentQuestion}
                       block={window.innerWidth < 480}
-                      loading={isAILoading}
                     >
-                      {isAILoading ? "AI đang xử lý..." : "Câu hỏi tiếp theo"}
+                      Câu hỏi tiếp theo
                     </Button>
                   </Col>
                   <Col>
@@ -670,21 +465,17 @@ export const QuizApp: React.FC = () => {
                       size={window.innerWidth < 480 ? "middle" : "large"}
                       onClick={handleCheckAnswer}
                       disabled={
-                        !userAnswer.trim() ||
-                        showAnswer ||
-                        !currentQuestion ||
-                        isAILoading
+                        !userAnswer.trim() || showAnswer || !currentQuestion
                       }
                       block={window.innerWidth < 480}
-                      loading={isAILoading}
                     >
-                      {isAILoading ? "AI đang đánh giá..." : "Kiểm tra đáp án"}
+                      Kiểm tra đáp án
                     </Button>
                   </Col>
                 </Row>
               </Card>
 
-              {/* Usage Guide */}
+              {/* Hướng dẫn sử dụng */}
               <Card title="Hướng dẫn sử dụng" style={{ marginTop: "16px" }}>
                 <Space direction="vertical">
                   <Text style={{ fontSize: "clamp(12px, 3vw, 14px)" }}>
@@ -700,17 +491,9 @@ export const QuizApp: React.FC = () => {
                   <Text style={{ fontSize: "clamp(12px, 3vw, 14px)" }}>
                     4. Nhấn "Kiểm tra đáp án" để xem kết quả
                   </Text>
-                  {geminiService && (
-                    <Text
-                      style={{
-                        fontSize: "clamp(12px, 3vw, 14px)",
-                        color: "#1890ff",
-                      }}
-                    >
-                      5. 🤖 AI sẽ cung cấp giải thích chi tiết và đánh giá thông
-                      minh
-                    </Text>
-                  )}
+                  <Text style={{ fontSize: "clamp(12px, 3vw, 14px)" }}>
+                    5. Nhấn "Nghe đáp án" để nghe đáp án đúng bằng tiếng Anh
+                  </Text>
                   <Text style={{ fontSize: "clamp(12px, 3vw, 14px)" }}>
                     6. Quan sát khuôn mặt đồng bộ hóa để theo dõi phát âm
                   </Text>
@@ -720,57 +503,6 @@ export const QuizApp: React.FC = () => {
           </Row>
         </Content>
       </Layout>
-
-      {/* AI Configuration Modal */}
-      <Modal
-        title="🔌 Kết nối Gemini AI"
-        open={showAIConfig}
-        onCancel={() => setShowAIConfig(false)}
-        footer={null}
-        width={400}
-      >
-        <Form onFinish={handleAIConfig} layout="vertical">
-          <Form.Item
-            name="apiKey"
-            label="Gemini API Key"
-            rules={[{ required: true, message: "Vui lòng nhập API key" }]}
-            help="Lấy API key miễn phí từ Google AI Studio"
-          >
-            <Input.Password
-              placeholder="Nhập Gemini API key của bạn"
-              size="large"
-            />
-          </Form.Item>
-          <Form.Item>
-            <Button type="primary" htmlType="submit" block size="large">
-              Kết nối AI
-            </Button>
-          </Form.Item>
-        </Form>
-        <Alert
-          message="Hướng dẫn lấy API Key:"
-          description={
-            <div>
-              1. Truy cập{" "}
-              <a
-                href="https://aistudio.google.com/"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Google AI Studio
-              </a>
-              <br />
-              2. Đăng nhập bằng tài khoản Google
-              <br />
-              3. Tạo API key mới
-              <br />
-              4. Sao chép và dán vào ô trên
-            </div>
-          }
-          type="info"
-          showIcon
-        />
-      </Modal>
     </Layout>
   );
 };
